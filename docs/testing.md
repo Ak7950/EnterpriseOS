@@ -1,3 +1,11 @@
 # Testing
 
-Run `npm test` for pure workflow tests. A manual acceptance path is: log in as admin, add an employee; log in as manager, create/assign a task and approve a leave; log in as employee, update its task and clock in. The API validates role and tenant context for each operation.
+The project uses Node's built-in test runner. Run:
+
+```bash
+npm test
+```
+
+Tests live in `test/`. The current automated test verifies that JWT generation yields a correctly shaped signed token with tenant claims. No coverage measurement, integration suite, browser suite, lint script, or build script is currently configured.
+
+Recommended next tests: login failures, role/tenant authorization boundaries, attendance duplicate handling, leave-date validation, scoped projects/tasks, and API integration tests against PostgreSQL.
