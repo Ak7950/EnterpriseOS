@@ -19,5 +19,6 @@
 - Migrations and demo seed data are explicit scripts. Production requires `DATABASE_URL`, blocks `pg-mem`, and blocks demo seeding.
 - Added startup JWT/CORS validation, security headers, body limits, and basic login throttling.
 - Restricted manager visibility to direct reports and validated task assignees belong to the requester's organization; added integration tests for both boundaries.
+- Employee creation validates roles and department ownership; administrators cannot self-escalate by creating super-admin accounts.
 - Updated Vercel/Neon deployment and smoke-test documentation.
 - Verification: `npm test` passed (11 tests); `npm audit --omit=dev` found 0 vulnerabilities.

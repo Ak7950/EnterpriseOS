@@ -12,6 +12,7 @@
 - HTTP responses include basic browser security headers; JSON request bodies are limited to 100 KB.
 - Login attempts are limited per process/IP to five failures per 15-minute window.
 - Managers are restricted to their direct reports for people, attendance, leave, and performance views; task assignment validates the assignee belongs to the manager's organization.
+- Employee creation validates roles and organization-owned departments; only a super-admin may create another super-admin.
 
 ## Gaps and production work
 
