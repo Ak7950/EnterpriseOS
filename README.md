@@ -28,7 +28,7 @@ The application serves a browser-based workspace and JSON API from one Express p
 
 - Node.js (ES modules) and Express
 - Browser-native HTML, CSS, and JavaScript
-- PostgreSQL through `pg`; `pg-mem` is used when `DATABASE_URL` is absent
+- PostgreSQL through `pg`; `pg-mem` is available only for local development and tests
 - `bcryptjs` for passwords and `jsonwebtoken` for bearer tokens
 - Docker and Docker Compose
 - Node built-in test runner
@@ -62,6 +62,7 @@ See [database documentation](docs/database.md) and [API documentation](docs/api.
 ```bash
 cp .env.example .env
 npm ci
+npm run db:seed-demo # optional local demo data only
 npm run dev
 ```
 
@@ -72,24 +73,26 @@ docker compose up -d postgres
 npm run dev
 ```
 
-Open `http://localhost:4000`.
+Open `http://localhost:4000`. Database schema creation and demo data are explicit commands; the application never performs either action at startup.
 
 ## Environment Variables
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
 | `PORT` | No | HTTP port; defaults to `4000` |
-| `DATABASE_URL` | No | PostgreSQL connection string; absence enables `pg-mem` |
-| `JWT_SECRET` | Production | JWT signing secret; a development fallback exists |
+| `DATABASE_URL` | Production | Neon/PostgreSQL connection string. Production startup fails when it is absent. |
+| `JWT_SECRET` | Yes | Unique signing secret of at least 32 characters. |
+| `CORS_ORIGIN` | Production | Comma-separated browser origins allowed to call the API, for example `https://your-app.vercel.app`. |
 
 ## Demo Accounts
 
-Development seed data provides `admin@demo.com`, `manager@demo.com`, and `employee@demo.com`. The development password is `Demo@12345`. Do not use these credentials in a public deployment.
+Run `npm run db:seed-demo` only for local development to create `admin@demo.com`, `manager@demo.com`, and `employee@demo.com`. The development password is `Demo@12345`. The command refuses to run in production.
 
 ## Testing
 
 ```bash
 npm test
+npm audit
 ```
 
 See [testing documentation](docs/testing.md).
@@ -100,7 +103,7 @@ See [testing documentation](docs/testing.md).
 docker compose up --build
 ```
 
-See [deployment documentation](docs/deployment.md).
+See [deployment documentation](docs/deployment.md) for Vercel and Neon setup, migrations, required variables, and a post-deployment smoke test.
 
 ## Project Structure
 
@@ -124,12 +127,11 @@ Screenshot to be added.
 ## Roadmap
 
 - Expand automated API and browser-level tests
-- Add production security middleware and an explicit CORS allowlist
 - Add pagination and server-side filtering for large datasets
 
 ## Known Limitations
 
-The current test suite is small, local `pg-mem` behavior may differ from PostgreSQL, and the application has no rate limiting or security headers. See [security documentation](docs/security.md).
+The current test suite is focused on authentication and critical tenant boundaries. Local `pg-mem` behavior may differ from Neon PostgreSQL; run the explicit migration against a non-production Neon branch before production. See [security documentation](docs/security.md).
 
 ## License
 

@@ -9,5 +9,15 @@
 
 ### Next steps
 
-1. Complete Phase 2 with targeted server, database, deployment, and authorization fixes.
-2. Do not push the rewritten history until the owner approves the non-fast-forward synchronization command.
+1. Create a Neon database and run `npm run db:migrate` against it from a trusted shell.
+2. Configure `DATABASE_URL`, `JWT_SECRET`, and `CORS_ORIGIN` in Vercel, then make a preview deployment and follow `docs/deployment.md` smoke tests.
+3. Do not push the rewritten history until the owner approves the non-fast-forward synchronization command.
+
+## Phases 2 and 3 complete — 2026-11-16
+
+- Exported the Express application without serverless startup side effects; Vercel routing is in `vercel.json` and `api/index.js`.
+- Migrations and demo seed data are explicit scripts. Production requires `DATABASE_URL`, blocks `pg-mem`, and blocks demo seeding.
+- Added startup JWT/CORS validation, security headers, body limits, and basic login throttling.
+- Restricted manager visibility to direct reports and validated task assignees belong to the requester's organization; added integration tests for both boundaries.
+- Updated Vercel/Neon deployment and smoke-test documentation.
+- Verification: `npm test` passed (11 tests); `npm audit --omit=dev` found 0 vulnerabilities.

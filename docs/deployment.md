@@ -1,8 +1,23 @@
 # Deployment
 
-## Prerequisites
+## Vercel and Neon
 
-Node.js 24 for the provided Docker image, or Docker with Docker Compose. Production requires PostgreSQL and a strong unique `JWT_SECRET`.
+The repository includes `vercel.json`, which sends API requests to the exported Express handler in `api/index.js` and serves browser assets from `public/`. Vercel must receive the source repository; do not upload `.env`.
+
+1. Create a Neon PostgreSQL project in a region close to the Vercel function region. Copy its pooled connection string, including TLS settings.
+2. In Vercel Project Settings → Environment Variables, set `DATABASE_URL`, `JWT_SECRET`, and `CORS_ORIGIN` for Production and Preview as appropriate. `JWT_SECRET` must be unique and at least 32 characters; `CORS_ORIGIN` is the deployed Vercel URL (or a comma-separated allowlist).
+3. Run the migration explicitly against the intended Neon database from a trusted shell: `npm run db:migrate`. This application never migrates or seeds during a request or serverless cold start.
+4. Import the repository in Vercel or deploy a preview with `vercel`. Promote only after the smoke test passes.
+
+Production refuses to start without `DATABASE_URL`, `JWT_SECRET`, and `CORS_ORIGIN`; it never falls back to `pg-mem` and demo seeding is blocked.
+
+## Deployment smoke test
+
+1. Load the deployment URL and confirm HTML, CSS, and JavaScript load.
+2. Sign in using an account intentionally created in the Neon database; demo accounts are not created by deployment.
+3. Confirm `/api/me` returns the signed-in user, then check dashboard, employee, department, attendance, leave, project, and task pages for that role.
+4. Confirm a manager cannot see another manager's direct reports or assign a task to another organization.
+5. Confirm a request from an unlisted browser Origin is rejected by CORS and that requests without a bearer token receive `401`.
 
 ## Docker
 
@@ -10,12 +25,12 @@ Node.js 24 for the provided Docker image, or Docker with Docker Compose. Product
 docker compose up --build
 ```
 
-Compose starts PostgreSQL 16 and the Express application on port 4000. The Compose credentials are development defaults only. The application migrates/seeds on first start.
+Compose starts PostgreSQL 16 and the Express application on port 4000. The Compose credentials are development defaults only. Run `npm run db:migrate` and, if desired, `npm run db:seed-demo` explicitly.
 
 ## Local database
 
-Set `DATABASE_URL` to use PostgreSQL. Without it, the app starts with `pg-mem`, and all records are lost on restart.
+Set `DATABASE_URL` to use PostgreSQL. Without it, local development uses `pg-mem` and all records are lost on restart. Production startup fails instead.
 
 ## Production considerations
 
-Use a managed/backed-up PostgreSQL instance, TLS termination, an explicit CORS allowlist, a secret manager for `JWT_SECRET`, restricted network exposure, health monitoring, and a tested migration/backup plan. No deployment platform or CD workflow is currently implemented.
+Use a managed/backed-up PostgreSQL instance, TLS termination, an explicit CORS allowlist, a secret manager for `JWT_SECRET`, restricted network exposure, health monitoring, and a tested migration/backup plan. Never run the demo seed against production.
