@@ -1,9 +1,34 @@
 import 'dotenv/config'; import express from 'express'; import cors from 'cors'; import path from 'node:path'; import crypto from 'node:crypto'; import { fileURLToPath } from 'node:url';
 import { isInMemory, migrate, q, pool } from './db.js'; import { seed } from './seed.js'; import { hash, requireAuth, allow, verifyPassword, tokenFor, validateJwtSecret } from './auth.js';
 const app=express(), port=process.env.PORT||4000; const __dirname=path.dirname(fileURLToPath(import.meta.url));
-const production=process.env.NODE_ENV==='production';
-const allowedOrigins=(process.env.CORS_ORIGIN||'').split(',').map(origin=>origin.trim()).filter(Boolean);
-if(production&&!allowedOrigins.length)throw new Error('CORS_ORIGIN is required in production.');
+const production = process.env.NODE_ENV === 'production';
+
+const configuredOrigins = (process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean);
+
+const vercelHostnames = [
+  process.env.VERCEL_URL,
+  process.env.VERCEL_BRANCH_URL,
+  ...(process.env.VERCEL_ENV === 'production'
+    ? [process.env.VERCEL_PROJECT_PRODUCTION_URL]
+    : [])
+].filter(Boolean);
+
+const vercelOrigins = vercelHostnames.map(
+  hostname => `https://${hostname}`
+);
+
+const allowedOrigins = [
+  ...new Set([...configuredOrigins, ...vercelOrigins])
+];
+
+if (production && !allowedOrigins.length) {
+  throw new Error(
+    'CORS_ORIGIN or Vercel deployment URLs are required in production.'
+  );
+}
 validateJwtSecret();
 const loginAttempts=new Map();
 app.disable('x-powered-by');
