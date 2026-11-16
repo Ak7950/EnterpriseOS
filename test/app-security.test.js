@@ -68,6 +68,58 @@ test('an admin cannot create a super-admin account', async () => {
   assert.equal((await response.json()).errorCode, 'VALIDATION_ERROR');
 });
 
+test('new employees receive a unique one-time password and must change it before using the API', async () => {
+  const createdResponse = await api('/api/employees', {
+    method: 'POST',
+    body: JSON.stringify({ firstName: 'New', lastName: 'Employee', email: 'new.employee@primary.test', role: 'EMPLOYEE' })
+  }, adminToken);
+  const created = (await createdResponse.json()).data;
+
+  assert.equal(createdResponse.status, 201);
+  assert.equal(typeof created.initialPassword, 'string');
+  assert.ok(created.initialPassword.length >= 32);
+  assert.equal('password_hash' in created, false);
+
+  const loginResponse = await api('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email: 'new.employee@primary.test', password: created.initialPassword })
+  });
+  const login = (await loginResponse.json()).data;
+  assert.equal(login.mustChangePassword, true);
+
+  const blocked = await api('/api/me', {}, login.token);
+  assert.equal(blocked.status, 403);
+  assert.equal((await blocked.json()).errorCode, 'PASSWORD_CHANGE_REQUIRED');
+
+  const newPassword = 'a-new-password-with-12-characters';
+  const changedResponse = await api('/api/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify({ currentPassword: created.initialPassword, newPassword })
+  }, login.token);
+  const changed = (await changedResponse.json()).data;
+  assert.equal(changedResponse.status, 200);
+  assert.equal(changed.mustChangePassword, false);
+
+  const relogin = await api('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email: 'new.employee@primary.test', password: newPassword })
+  });
+  assert.equal((await relogin.json()).data.mustChangePassword, false);
+});
+
+test('local SPA assets are served and unknown API routes return JSON', async () => {
+  const root = await fetch(`${baseUrl}/`);
+  const stylesheet = await fetch(`${baseUrl}/styles.css`);
+  const missingApi = await api('/api/not-a-route');
+
+  assert.equal(root.status, 200);
+  assert.match(await root.text(), /EnterpriseOS/);
+  assert.equal(stylesheet.status, 200);
+  assert.match(await stylesheet.text(), /--/);
+  assert.equal(missingApi.status, 404);
+  assert.equal((await missingApi.json()).errorCode, 'NOT_FOUND');
+});
+
 test.after(async () => {
   await new Promise(resolve => server.close(resolve));
   await pool.end();

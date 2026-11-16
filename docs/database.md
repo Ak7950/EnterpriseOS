@@ -32,4 +32,4 @@ erDiagram
 
 Tenant-owned records contain `organization_id`. Key foreign keys include user-to-department/manager, task-to-project/assignee/creator, and attendance/leave/notification/review-to-user. Indexes exist for task tenant/status, user manager, and audit tenant/time queries.
 
-Run `npm run db:migrate` to create/update the schema. `server/seed.js` adds development data only when explicitly invoked through `npm run db:seed-demo`; that command refuses to run in production.
+With no `DATABASE_URL`, `npm run dev` initializes the in-memory schema and demo data in the same process. Run `npm run db:migrate` to create/update a persistent PostgreSQL schema; `server/seed.js` can be explicitly invoked through `npm run db:seed-demo` for local PostgreSQL only and refuses production.

@@ -13,6 +13,7 @@
 - Login attempts are limited per process/IP to five failures per 15-minute window.
 - Managers are restricted to their direct reports for people, attendance, leave, and performance views; task assignment validates the assignee belongs to the manager's organization.
 - Employee creation validates roles and organization-owned departments; only a super-admin may create another super-admin.
+- New employees receive a random, one-time initial password. Its hash is stored; only the authorized create response receives the plaintext. API access is blocked until the employee changes it after first sign-in.
 
 ## Gaps and production work
 

@@ -22,3 +22,10 @@
 - Employee creation validates roles and department ownership; administrators cannot self-escalate by creating super-admin accounts.
 - Updated Vercel/Neon deployment and smoke-test documentation.
 - Verification: `npm test` passed (11 tests); `npm audit --omit=dev` found 0 vulnerabilities.
+
+## Focused deployment-blocker fixes — 2026-11-16
+
+- Replaced the shared employee password with a cryptographically random, per-employee initial password. Only the authorized create response contains it; the database stores only its hash. First-login tokens are restricted to changing that password.
+- Fixed empty-`DATABASE_URL` development startup: the application now migrates and seeds `pg-mem` in its own process before listening. PostgreSQL migrations remain explicit; Vercel and production do not migrate or seed at startup.
+- Replaced legacy Vercel rewrite configuration with the documented root Express default export and added local verification that SPA assets load while unknown API paths return JSON `404`.
+- Remaining uncertainty: Vercel's CDN/function routing has not been verified by a Vercel preview deployment. Run the documented preview smoke test after configuring environment variables.

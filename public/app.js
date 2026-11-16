@@ -148,7 +148,7 @@ async function openNewEmployeeModal() {
         </div>
       `,
       onsubmit: async (data) => {
-        await api('/employees', {
+        const created = await api('/employees', {
           method: 'POST',
           body: JSON.stringify({
             firstName: data.firstName.trim(),
@@ -159,6 +159,7 @@ async function openNewEmployeeModal() {
             designation: data.designation?.trim() || null
           })
         });
+        window.alert(`Employee created. Copy and share this one-time initial password through a secure channel:\n\n${created.initialPassword}\n\nThey must change it after signing in.`);
         toast('Employee created successfully');
         route();
       }
@@ -376,6 +377,23 @@ function login() {
       token = d.token;
       sessionStorage.token = token;
       user = d.user;
+      if (d.mustChangePassword) return changePassword();
+      route();
+    } catch (e) {
+      toast(e.message);
+    }
+  };
+}
+
+function changePassword() {
+  app.innerHTML = `<section class="login"><div class="login-art"><div class="brand"><i>E</i>Enterprise<span>OS</span></div><small>ACCOUNT SECURITY</small><h1>Set your own<br>secure password.</h1><p>Your initial password can only be used to sign in and set a new password.</p></div><form class="login-card" id="change-password"><div class="brand mobile"><i>E</i>Enterprise<span>OS</span></div><small>PASSWORD REQUIRED</small><h2>Change your password</h2><p>Create a unique password with at least 12 characters to continue.</p><label>Initial password</label><input name="currentPassword" type="password" required autocomplete="current-password"><label>New password</label><input name="newPassword" type="password" minlength="12" required autocomplete="new-password"><button>Save password <b>→</b></button></form></section>`;
+  document.querySelector('#change-password').onsubmit = async e => {
+    e.preventDefault();
+    try {
+      const d = await api('/auth/change-password', { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(e.target))) });
+      token = d.token;
+      sessionStorage.token = token;
+      user = null;
       route();
     } catch (e) {
       toast(e.message);

@@ -33,6 +33,7 @@ export const tokenFor = user =>
       sub: user.id,
       org: user.organization_id,
       role: user.role,
+      passwordChangeRequired: Boolean(user.must_change_password),
       name: `${user.first_name} ${user.last_name}`
     },
     validateJwtSecret(),

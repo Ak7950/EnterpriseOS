@@ -62,7 +62,6 @@ See [database documentation](docs/database.md) and [API documentation](docs/api.
 ```bash
 cp .env.example .env
 npm ci
-npm run db:seed-demo # optional local demo data only
 npm run dev
 ```
 
@@ -73,7 +72,7 @@ docker compose up -d postgres
 npm run dev
 ```
 
-Open `http://localhost:4000`. Database schema creation and demo data are explicit commands; the application never performs either action at startup.
+With an empty `DATABASE_URL`, `npm run dev` initializes an in-memory schema and local demo data in the same application process. It is reset whenever the process stops. For PostgreSQL, run `npm run db:migrate` explicitly; migrations and seeds never run at production or Vercel startup.
 
 ## Environment Variables
 
@@ -86,7 +85,11 @@ Open `http://localhost:4000`. Database schema creation and demo data are explici
 
 ## Demo Accounts
 
-Run `npm run db:seed-demo` only for local development to create `admin@demo.com`, `manager@demo.com`, and `employee@demo.com`. The development password is `Demo@12345`. The command refuses to run in production.
+When using the in-memory local development database, `npm run dev` creates `admin@demo.com`, `manager@demo.com`, and `employee@demo.com`. The development password is `Demo@12345`. For a persistent local PostgreSQL database, run `npm run db:seed-demo`; that command refuses to run in production.
+
+## New employee onboarding
+
+Creating an employee produces a unique, one-time initial password visible only in the administrator's create-employee response. Share it through a secure channel. The employee can only change that password after their first sign-in; application access is blocked until the change succeeds.
 
 ## Testing
 
