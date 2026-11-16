@@ -3,6 +3,10 @@ import { newDb, DataType } from 'pg-mem';
 import crypto from 'node:crypto';
 const { Pool } = pg;
 const memory = !process.env.DATABASE_URL;
+
+if (memory && process.env.NODE_ENV === 'production') {
+  throw new Error('DATABASE_URL is required in production. Refusing to use the in-memory database.');
+}
 const db = memory ? newDb({ autoCreateForeignKeyIndices: true }) : null;
 if (memory) db.public.registerFunction({ name: 'gen_random_uuid', returns: DataType.uuid, implementation: () => crypto.randomUUID(), impure: true });
 export const pool = memory ? newDbPool(db) : new Pool({ connectionString: process.env.DATABASE_URL });

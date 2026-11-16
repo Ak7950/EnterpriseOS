@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 
 const DEVELOPMENT_SECRET = 'development-secret-change-me-123456789';
 
-const secret = () => {
+export const validateJwtSecret = () => {
   const value = process.env.JWT_SECRET?.trim();
 
   if (!value) {
@@ -35,7 +35,7 @@ export const tokenFor = user =>
       role: user.role,
       name: `${user.first_name} ${user.last_name}`
     },
-    secret(),
+    validateJwtSecret(),
     { expiresIn: '8h' }
   );
 
@@ -51,7 +51,7 @@ export function requireAuth(req, res, next) {
   }
 
   try {
-    req.user = jwt.verify(token, secret());
+    req.user = jwt.verify(token, validateJwtSecret());
     next();
   } catch {
     return res.status(401).json({
