@@ -1,31 +1,56 @@
-# Codex Handoff
+# Project Handoff and Release Status
 
-## Phase 1 complete — 2026-11-16
+This file records the current project state for maintainers. It replaces the earlier implementation handoff notes, which no longer reflected the final repository structure or deployment work.
 
-- Rewrote the local `feature/production-readiness` branch to remove commits `9a2d695` and `7b6dfec`, preserving `24a1e61` and `eb527c8`.
-- Recreated `.env.example` with placeholders only. The local `.env` was not read or changed.
-- Verified `.env` is ignored and untracked.
-- `npm test` passed: 9 tests, 0 failures.
+## Repository
 
-### Next steps
+- Public repository: https://github.com/Ak7950/EnterpriseOS
+- Active implementation branch: feature/production-readiness
+- Default branch: main
+- The active implementation branch has not been merged into main in this handoff.
+- Keep the submitted IEEE report and its recorded links unchanged.
 
-1. Create a Neon database and run `npm run db:migrate` against it from a trusted shell.
-2. Configure `DATABASE_URL`, `JWT_SECRET`, and `CORS_ORIGIN` in Vercel, then make a preview deployment and follow `docs/deployment.md` smoke tests.
-3. Do not push the rewritten history until the owner approves the non-fast-forward synchronization command.
+## Academic demonstration link
 
-## Phases 2 and 3 complete — 2026-11-16
+The public Vercel Preview URL recorded in the submitted IEEE report is:
 
-- Exported the Express application without serverless startup side effects; Vercel routing is in `vercel.json` and `api/index.js`.
-- Migrations and demo seed data are explicit scripts. Production requires `DATABASE_URL`, blocks `pg-mem`, and blocks demo seeding.
-- Added startup JWT/CORS validation, security headers, body limits, and basic login throttling.
-- Restricted manager visibility to direct reports and validated task assignees belong to the requester's organization; added integration tests for both boundaries.
-- Employee creation validates roles and department ownership; administrators cannot self-escalate by creating super-admin accounts.
-- Updated Vercel/Neon deployment and smoke-test documentation.
-- Verification: `npm test` passed (11 tests); `npm audit --omit=dev` found 0 vulnerabilities.
+https://enterprise-ra6w4zeh7-ak795.vercel.app/
 
-## Focused deployment-blocker fixes — 2026-11-16
+Preserve this deployment while it is used for academic evaluation. Do not describe it as the verified Production-domain release.
 
-- Replaced the shared employee password with a cryptographically random, per-employee initial password. Only the authorized create response contains it; the database stores only its hash. First-login tokens are restricted to changing that password.
-- Fixed empty-`DATABASE_URL` development startup: the application now migrates and seeds `pg-mem` in its own process before listening. PostgreSQL migrations remain explicit; Vercel and production do not migrate or seed at startup.
-- Replaced legacy Vercel rewrite configuration with the documented root Express default export and added local verification that SPA assets load while unknown API paths return JSON `404`.
-- Remaining uncertainty: Vercel's CDN/function routing has not been verified by a Vercel preview deployment. Run the documented preview smoke test after configuring environment variables.
+## Verified application state
+
+The deployed Preview was opened publicly in an incognito browser. The demonstrated workspace contained:
+
+- One Engineering department.
+- Three user accounts: one Super Admin and two employees.
+- One active project.
+- Three tasks distributed across To Do, In Progress, and Done.
+- One administrator attendance record.
+
+These are synthetic demonstration records, not data from a real employer.
+
+The recorded local verification run passed 20 automated tests and reported zero production-dependency vulnerabilities.
+
+## Known release follow-ups
+
+1. Verify and complete the separate Vercel Production-domain deployment, including Production environment variables and a full incognito smoke test.
+2. Complete server-side India Standard Time normalization for the dashboard attendance count and clock-in/clock-out queries. The backend currently still uses PostgreSQL current_date in these locations.
+3. Add a browser end-to-end test suite and a PostgreSQL/Neon integration test workflow before treating the application as production-hardened.
+
+## Operational safeguards
+
+- Never commit .env or real secrets.
+- Do not run demo seeding in production.
+- Do not rerun the first-administrator bootstrap against an organization that already has an administrator.
+- Run database migrations explicitly against the intended PostgreSQL/Neon database.
+- Keep production credentials separate from Preview credentials.
+
+## Local verification commands
+
+~~~bash
+npm ci
+npm test
+npm audit --omit=dev
+git diff --check
+~~~

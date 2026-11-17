@@ -1,141 +1,180 @@
 # EnterpriseOS
 
-An operations workspace for workforce visibility, delivery tracking, and role-based collaboration.
+**Enterprise Workforce Management System (EWMS)** — a browser-based, multi-tenant workspace for workforce administration and project delivery.
+
+[![Live demo](https://img.shields.io/badge/demo-public%20Vercel%20preview-2563eb)](https://enterprise-ra6w4zeh7-ak795.vercel.app/)
+[![Repository](https://img.shields.io/badge/source-GitHub-181717?logo=github)](https://github.com/Ak7950/EnterpriseOS)
+
+> **Live demonstration:** [Open EnterpriseOS](https://enterprise-ra6w4zeh7-ak795.vercel.app/)  
+> This is the public Vercel Preview URL recorded in the submitted IEEE report. It is deployment-specific; preserve this deployment while it is being used for academic evaluation. The separate Production-domain release has not yet been marked as verified.
 
 ## Overview
 
-EnterpriseOS is a Node.js modular-monolith application for managing employees, departments, attendance, leave, projects, tasks, performance reviews, notifications, reports, and audit activity in an organization-scoped workspace.
+EnterpriseOS brings employee and department administration, attendance, leave workflows, project/task tracking, performance information, notifications, and audit activity into one organization-scoped workspace. It is implemented as a modular monolith: a browser-native frontend communicates with an Express JSON API, while PostgreSQL stores persistent application data.
 
-## Problem Statement
+The current public demonstration uses a Neon PostgreSQL database and synthetic example records created through the application. These records are for demonstration only and do not represent a real employer.
 
-Workforce information and delivery work often live in disconnected tools. Teams need a single, access-controlled view of people operations and project execution.
+## Features
 
-## Solution
+- **Authentication and access control:** JWT-based sign-in, bcrypt password hashing, and server-side role checks for Super Admin, Admin, Manager, and Employee roles.
+- **Employee directory:** Create and view employees, assign departments, and record job designations.
+- **Department management:** Create and view organization departments.
+- **Attendance:** Clock in/out, view attendance records, search records, and export attendance data as CSV.
+- **Leave management:** Submit leave requests, review pending requests, approve/reject requests, and notify requesters.
+- **Project and task management:** Create projects, assign tasks, set priorities/due dates, and update task workflow status through an execution board.
+- **Dashboard:** Organization-scoped workforce, project, task, leave, and attendance summaries.
+- **Governance:** Notifications, performance-review records, and audit-log retrieval.
+- **Tenant boundaries:** Authenticated API operations use the organization claim in the verified JWT and apply organization-scoped queries.
 
-The application serves a browser-based workspace and JSON API from one Express process. JWT identity establishes an organization and role for each request; database queries apply the resulting scope.
+## Technology stack
 
-## Core Features
-
-- JWT sign-in with Admin, Manager, and Employee roles
-- People and department administration
-- Clock-in/out, attendance records, and CSV export
-- Leave requests and elevated-role approval workflow
-- Projects, task assignment, execution board, and task-status workflow
-- Role-scoped project and task visibility
-- Performance reviews, notifications, dashboard metrics, and audit logs
-
-## Technology Stack
-
-- Node.js (ES modules) and Express
-- Browser-native HTML, CSS, and JavaScript
-- PostgreSQL through `pg`; `pg-mem` is available only for local development and tests
-- `bcryptjs` for passwords and `jsonwebtoken` for bearer tokens
-- Docker and Docker Compose
-- Node built-in test runner
-
-## System Architecture
-
-```mermaid
-flowchart LR
-  Browser[Browser SPA] -->|fetch /api| Express[Express server]
-  Express --> Auth[JWT authentication and role checks]
-  Auth --> Routes[API routes]
-  Routes --> DB[(PostgreSQL or pg-mem)]
-```
-
-See [architecture documentation](docs/architecture.md).
-
-## Authentication & Authorization
-
-`POST /api/auth/login` returns an eight-hour JWT. Authenticated calls use `Authorization: Bearer <token>`. Server routes perform role checks and organization scoping. Admins can see organization-wide delivery data, managers see their managed projects, and employees see their assigned tasks/projects.
-
-## Multi-Tenancy
-
-Implemented: tenant-owned tables use `organization_id`, and authenticated API queries scope access to the token's organization.
-
-## Database & API
-
-See [database documentation](docs/database.md) and [API documentation](docs/api.md).
-
-## Local Development
-
-```bash
-cp .env.example .env
-npm ci
-npm run dev
-```
-
-Without `DATABASE_URL`, the app uses an in-memory database that resets on restart. For persistent data:
-
-```bash
-docker compose up -d postgres
-npm run dev
-```
-
-With an empty `DATABASE_URL`, `npm run dev` initializes an in-memory schema and local demo data in the same application process. It is reset whenever the process stops. For PostgreSQL, run `npm run db:migrate` explicitly; migrations and seeds never run at production or Vercel startup.
-
-## Environment Variables
-
-| Variable | Required | Purpose |
+| Layer | Technology | Responsibility |
 | --- | --- | --- |
-| `PORT` | No | HTTP port; defaults to `4000` |
-| `DATABASE_URL` | Production | Neon/PostgreSQL connection string. Production startup fails when it is absent. |
-| `JWT_SECRET` | Yes | Unique signing secret of at least 32 characters. |
-| `CORS_ORIGIN` | Production | Comma-separated browser origins allowed to call the API, for example `https://your-app.vercel.app`. |
+| Frontend | HTML, CSS, vanilla JavaScript | Browser interface and API requests |
+| Backend | Node.js (ES modules), Express | REST-style JSON API and business logic |
+| Authentication | jsonwebtoken, bcryptjs | Signed access tokens and password hashing |
+| Persistent database | PostgreSQL via pg | Organization, workforce, delivery, and audit records |
+| Local test/development database | pg-mem | In-memory database when DATABASE_URL is unset |
+| Cloud application hosting | Vercel | Static assets and Express application entry point |
+| Managed database hosting | Neon PostgreSQL | Hosted relational database |
+| Source control / CI | GitHub, GitHub Actions | Version control and automated Node test run |
+| Local container workflow | Docker, Docker Compose | Local PostgreSQL and application setup |
 
-## Demo Accounts
+## Architecture
 
-When using the in-memory local development database, `npm run dev` creates `admin@demo.com`, `manager@demo.com`, and `employee@demo.com`. The development password is `Demo@12345`. For a persistent local PostgreSQL database, run `npm run db:seed-demo`; that command refuses to run in production.
+~~~mermaid
+flowchart TD
+    Browser[Browser: HTML / CSS / JavaScript]
+    Static[Vercel static asset delivery]
+    Handler[Root Express entry point]
+    Middleware[Security headers, CORS, JSON limits]
+    Auth[JWT authentication and role checks]
+    Routes[Express API routes]
+    DB[(Neon PostgreSQL)]
+    DevDB[(pg-mem for local development)]
 
-## New employee onboarding
+    Browser --> Static
+    Browser -->|/api requests| Handler
+    Handler --> Middleware --> Auth --> Routes --> DB
+    Routes -. local development .-> DevDB
+~~~
 
-Creating an employee produces a unique, one-time initial password visible only in the administrator's create-employee response. Share it through a secure channel. The employee can only change that password after their first sign-in; application access is blocked until the change succeeds.
+The root index.js exports the Express application for Vercel. server/index.js defines routes and middleware. server/auth.js handles token and password operations, while server/db.js provides the PostgreSQL/pg-mem query layer and schema initialization.
 
-## Testing
+See [Architecture](docs/architecture.md) and [Database Design](docs/database.md).
 
-```bash
+## Local development
+
+### Requirements
+
+- Node.js 24 or a compatible current Node.js release
+- npm
+- PostgreSQL only if you want persistent local data; otherwise the app uses pg-mem
+
+### Setup
+
+~~~bash
+git clone https://github.com/Ak7950/EnterpriseOS.git
+cd EnterpriseOS
+git checkout feature/production-readiness
+npm ci
+cp .env.example .env
+~~~
+
+Edit .env before starting the application:
+
+- Keep NODE_ENV=development.
+- Set a local JWT_SECRET with at least 32 characters. You can generate one with openssl rand -base64 48.
+- Leave DATABASE_URL empty to use the in-memory pg-mem database, or set it to a PostgreSQL connection string for persistent data.
+- Keep CORS_ORIGIN=http://localhost:4000 for the local browser origin.
+
+Start the application:
+
+~~~bash
+npm run dev
+~~~
+
+Open [http://localhost:4000](http://localhost:4000).
+
+When DATABASE_URL is empty, local development initializes the in-memory schema and development seed data in the application process. The data is reset when the process stops. Do not use the development demo accounts or seed data in a public deployment.
+
+### Persistent local PostgreSQL
+
+Set DATABASE_URL in .env to your local PostgreSQL database, then run:
+
+~~~bash
+npm run db:migrate
+npm run db:seed-demo
+npm run dev
+~~~
+
+The demo-seed command refuses to run when NODE_ENV is production.
+
+## Environment variables
+
+| Variable | Required | Description |
+| --- | --- | --- |
+| PORT | No | Local HTTP port; defaults to 4000. |
+| NODE_ENV | Yes | Use development locally and production in the hosted production environment. |
+| DATABASE_URL | Production | PostgreSQL/Neon connection string. Leave blank only for local pg-mem development. |
+| JWT_SECRET | Yes | Unique random signing secret of at least 32 characters. Never commit a real value. |
+| CORS_ORIGIN | Production | Comma-separated allowlist of browser origins. Vercel deployment hostnames are also recognized by the application. |
+
+See [.env.example](.env.example). Never commit .env, database credentials, JWT secrets, or generated one-time passwords.
+
+## Database commands
+
+| Command | Purpose |
+| --- | --- |
+| npm run db:migrate | Create/update the PostgreSQL schema against DATABASE_URL. |
+| npm run db:seed-demo | Add local demo data; blocked when NODE_ENV is production. |
+| npm run db:bootstrap-admin | Create the first Super Admin in a PostgreSQL database that does not already have an administrator. The generated initial password is printed once. |
+
+Migrations and demo seeding are explicit operations. They are not run during a Vercel request or serverless cold start. Do not rerun the administrator bootstrap against a database that already has an administrator.
+
+## Testing and verification
+
+Run the automated tests and dependency audit:
+
+~~~bash
 npm test
-npm audit
-```
+npm audit --omit=dev
+~~~
 
-See [testing documentation](docs/testing.md).
+The latest verified local run recorded **20 passing tests and 0 failures**. The production-dependency audit reported **0 vulnerabilities** at that verification point. The automated suite covers authentication, authorization/tenant boundaries, employee onboarding, bootstrap safeguards, local startup, API fallback behavior, and India-date helper behavior. It is not a full browser end-to-end or load-test suite.
 
-## Docker
+See [Testing](docs/testing.md) and [Security](docs/security.md).
 
-```bash
-docker compose up --build
-```
+## Deployment
 
-See [deployment documentation](docs/deployment.md) for Vercel and Neon setup, migrations, required variables, and a post-deployment smoke test.
+The tested public demonstration is the Vercel Preview URL shown at the top of this README and in the submitted IEEE report. Vercel hosts the application entry point and static assets; Neon provides PostgreSQL persistence.
 
-## Project Structure
+**Production release status:** The public Preview has been opened and tested. The separate Vercel Production-domain release has not yet been confirmed by a successful end-to-end smoke test. Do not describe the Preview as a verified Production release.
 
-```text
-public/   Browser application assets
-server/   Express server, auth, database schema, and seed data
-test/     Node test files
-docs/     Engineering documentation
-```
+For environment configuration, database migration, first-admin setup, and the deployment smoke test, see [Deployment](docs/deployment.md).
 
-## Screenshots
+## Repository structure
 
-Screenshot to be added.
+~~~text
+public/                  Browser application (HTML, CSS, JavaScript)
+server/                  Express routes, authentication, database and scripts
+test/                    Node.js automated tests
+docs/                    Architecture, API, database, deployment and security guides
+.github/workflows/       GitHub Actions test workflow
+index.js                 Vercel Express application entry point
+package.json             Scripts and runtime dependencies
+.env.example             Safe local environment template
+~~~
 
-## Team Contributions
+## Project team
 
-- Developer 1 — Backend/API/database: routes, authorization, schema, and seed data
-- Developer 2 — Frontend/UI: browser UI, task board, forms, and accessibility
-- Developer 3 — Integration/DevOps/quality: Docker, CI, test automation, analytics/reporting, and documentation
+**Group 4 — Software Engineering (UCS503)**  
+Department of Computer Engineering, Thapar Institute of Engineering and Technology
 
-## Roadmap
-
-- Expand automated API and browser-level tests
-- Add pagination and server-side filtering for large datasets
-
-## Known Limitations
-
-The current test suite is focused on authentication and critical tenant boundaries. Local `pg-mem` behavior may differ from Neon PostgreSQL; run the explicit migration against a non-production Neon branch before production. See [security documentation](docs/security.md).
+- Avik Khetarpal
+- Humza Ali Choudhri
+- Shashwat Tewari
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+This project is released under the MIT License. See LICENSE.
