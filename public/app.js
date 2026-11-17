@@ -16,6 +16,22 @@ const api = async (p, o = {}) => {
 
 const esc = s => String(s ?? '').replace(/[&<>]/g, x => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[x]));
 const date = s => s ? new Date(s).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'No deadline';
+const indiaDate = (date = new Date()) => {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).formatToParts(date);
+
+  const fields = Object.fromEntries(
+    parts
+      .filter(part => part.type !== 'literal')
+      .map(part => [part.type, part.value])
+  );
+
+  return `${fields.year}-${fields.month}-${fields.day}`;
+};
 const initials = s => String(s || '?').split(' ').map(x => x[0]).join('').slice(0, 2).toUpperCase();
 const label = s => String(s || '').replaceAll('_', ' ').replace(/\b\w/g, x => x.toUpperCase());
 
@@ -530,7 +546,7 @@ async function attendance() {
   const [rows, team] = await Promise.all([api('/attendance?limit=1000'), ['ADMIN', 'SUPER_ADMIN', 'MANAGER'].includes(user.role) ? api('/team-members') : Promise.resolve([{ name: user.name }])]);
   const records = user.role === 'MANAGER' ? rows.filter(r => team.some(member => member.name === r.employee)) : rows;
   const dayKey = value => String(value || '').slice(0, 10);
-  const now = new Date(), today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const today = indiaDate();
   const todayRows = records.filter(r => dayKey(r.work_date) === today), present = new Set(todayRows.map(r => r.employee)).size, teamSize = team.length || 1, coverage = Math.min(100, Math.round(present / teamSize * 100)), clockedIn = todayRows.filter(r => !r.clock_out).length, missing = Math.max(0, teamSize - present);
   frame('attendance', `<section class="page-title"><div><small>WORKFORCE OPERATIONS</small><h1>Attendance hub</h1><p>Keep a reliable, transparent record of the workday.</p></div><div class="view-actions"><button id="export-attendance" class="secondary export">⇩ Export CSV</button></div></section><section class="attendance"><article><small>YOUR WORKDAY</small><h2>Ready to start?</h2><p>Record your time securely. Your working duration is calculated automatically.</p><button id="in">◷ Clock in</button><button class="trans" id="out">Clock out</button><footer>✓ One attendance record per working day</footer></article><article class="card coverage-card"><small>TODAY'S COVERAGE</small><h2>${user.role === 'MANAGER' ? 'Your team attendance' : user.role === 'EMPLOYEE' ? 'Your attendance status' : 'Workforce attendance'}</h2><div class="coverage-number"><b>${coverage}%</b><span>${present} of ${teamSize} ${teamSize === 1 ? 'person' : 'people'} present</span></div><div class="coverage-meter" role="progressbar" aria-label="Attendance coverage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${coverage}"><i style="width:${coverage}%"></i></div><div class="coverage-stats"><span><b>${clockedIn}</b> currently clocked in</span><span><b>${missing}</b> not recorded</span></div><small>Updated from today’s actual clock-in records.</small></article></section><section style="margin-top:24px"><div class="card-title"><div><small>FULL RECORD</small><h2>Attendance database</h2></div></div><p class="data-note"><b>${records.length} records loaded</b> · Search the complete record and export it for Excel.</p><section class="tablecard"><div class="toolbar"><label>⌕ <input id="attendance-search" placeholder="Search employee, email, or department"></label></div><div class="scroll"><table><thead><tr><th>Employee</th><th>Department</th><th>Work date</th><th>Clock in</th><th>Clock out</th><th>Status</th></tr></thead><tbody>${records.map(r => `<tr><td class="person">${av(r.employee)}<span><b>${esc(r.employee)}</b><small>${esc(r.email)}</small></span></td><td>${esc(r.department || '—')}</td><td>${date(r.work_date)}</td><td>${r.clock_in ? new Date(r.clock_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}</td><td>${r.clock_out ? new Date(r.clock_out).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Open'}</td><td><span class="tag status-present">${label(r.status || 'PRESENT')}</span></td></tr>`).join('') || '<tr><td colspan="6" class="empty">No attendance records yet.</td></tr>'}</tbody></table></div></section></section>`);
   for (let [id, path] of [['in', 'clock-in'], ['out', 'clock-out']]) {
