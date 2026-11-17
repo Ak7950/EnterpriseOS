@@ -8,13 +8,13 @@ EnterpriseOS uses Node.js's built-in test runner. Run the suite with:
 npm test
 ~~~
 
-The latest verified local run recorded **21 tests passed, 0 failed**. The production-dependency audit recorded **0 vulnerabilities** with:
+The latest GitHub Actions run recorded **21 tests passed, 0 failed**. The production-dependency audit during CI recorded **0 vulnerabilities**. Run the same checks locally with:
 
 ~~~bash
 npm audit --omit=dev
 ~~~
 
-These are results from the recorded verification run; rerun both commands against the current checkout before making a new release claim.
+The updated feature branch has a successful CI run. Your local checkout should also be updated and tested before considering local verification complete.
 
 ## Test coverage areas
 
