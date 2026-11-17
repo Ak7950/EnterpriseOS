@@ -30,12 +30,12 @@ The deployed Preview was opened publicly in an incognito browser. The demonstrat
 
 These are synthetic demonstration records, not data from a real employer.
 
-The recorded local verification run passed 20 automated tests and reported zero production-dependency vulnerabilities.
+The recorded local verification run passed 20 automated tests and reported zero production-dependency vulnerabilities before the latest attendance fix. The latest feature branch adds one API regression test; rerun the suite to confirm the new total.
 
 ## Known release follow-ups
 
 1. Verify and complete the separate Vercel Production-domain deployment, including Production environment variables and a full incognito smoke test.
-2. Complete server-side India Standard Time normalization for the dashboard attendance count and clock-in/clock-out queries. The backend currently still uses PostgreSQL current_date in these locations.
+2. Confirm the latest server-side Asia/Kolkata attendance date fix with the full automated test suite and a Preview smoke test around the India date boundary.
 3. Add a browser end-to-end test suite and a PostgreSQL/Neon integration test workflow before treating the application as production-hardened.
 
 ## Operational safeguards

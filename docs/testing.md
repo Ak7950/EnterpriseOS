@@ -8,7 +8,7 @@ EnterpriseOS uses Node.js's built-in test runner. Run the suite with:
 npm test
 ~~~
 
-The latest verified local run recorded **20 tests passed, 0 failed**. The production-dependency audit recorded **0 vulnerabilities** with:
+The latest verified local run recorded **21 tests passed, 0 failed**. The production-dependency audit recorded **0 vulnerabilities** with:
 
 ~~~bash
 npm audit --omit=dev
@@ -29,6 +29,7 @@ The current automated tests cover:
 - Safe administrator-bootstrap configuration, transaction behavior, and duplicate-administrator rejection.
 - In-memory development startup initialization.
 - India-local date helper behavior around UTC/IST date boundaries.
+- Attendance API behavior: clock-in work date, dashboard attendance count, and clock-out all use the India-local work date.
 
 ## Dependency audit
 

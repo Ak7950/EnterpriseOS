@@ -141,7 +141,7 @@ npm test
 npm audit --omit=dev
 ~~~
 
-The latest verified local run recorded **20 passing tests and 0 failures**. The production-dependency audit reported **0 vulnerabilities** at that verification point. The automated suite covers authentication, authorization/tenant boundaries, employee onboarding, bootstrap safeguards, local startup, API fallback behavior, and India-date helper behavior. It is not a full browser end-to-end or load-test suite.
+The latest verified local run recorded **21 passing tests and 0 failures**. The production-dependency audit reported **0 vulnerabilities** at that verification point. The automated suite covers authentication, authorization/tenant boundaries, employee onboarding, bootstrap safeguards, local startup, API fallback behavior, and India-local attendance date behavior. It is not a full browser end-to-end or load-test suite.
 
 See [Testing](docs/testing.md) and [Security](docs/security.md).
 

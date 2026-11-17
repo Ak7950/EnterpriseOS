@@ -24,7 +24,6 @@
 - Route validation is manual and distributed across handlers rather than implemented through one shared schema-validation layer.
 - Application audit records are not immutable external audit storage.
 - Automated tests do not replace a full browser end-to-end, load, penetration, or production database integration test suite.
-- The attendance dashboard, clock-in, and clock-out backend queries still use PostgreSQL current_date. The frontend formats attendance dates in Asia/Kolkata, but server-side date normalization remains incomplete around the UTC/India date boundary.
 
 ## Secrets and reporting
 

@@ -94,6 +94,6 @@ After the intended build is deployed:
 
 ## Important operational notes
 
-- The backend attendance routes and dashboard query still use PostgreSQL current_date; complete server-side India Standard Time normalization remains a known follow-up.
-- The browser attendance page uses an India-local date helper, but that alone does not make the backend fully timezone-safe around midnight.
+- The dashboard attendance count and attendance clock-in/clock-out operations now use the server-side Asia/Kolkata date helper.
+- The India-local date helper is covered by UTC/IST boundary unit tests, and an API regression test covers clock-in, dashboard attendance counting, and clock-out.
 - The tested public Preview should not be described as a verified Production release until the separate Production-domain smoke test has passed.
