@@ -16,6 +16,22 @@ const api = async (p, o = {}) => {
 
 const esc = s => String(s ?? '').replace(/[&<>]/g, x => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[x]));
 const date = s => s ? new Date(s).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'No deadline';
+const indiaDate = (date = new Date()) => {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).formatToParts(date);
+
+  const fields = Object.fromEntries(
+    parts
+      .filter(part => part.type !== 'literal')
+      .map(part => [part.type, part.value])
+  );
+
+  return `${fields.year}-${fields.month}-${fields.day}`;
+};
 const initials = s => String(s || '?').split(' ').map(x => x[0]).join('').slice(0, 2).toUpperCase();
 const label = s => String(s || '').replaceAll('_', ' ').replace(/\b\w/g, x => x.toUpperCase());
 
@@ -148,7 +164,7 @@ async function openNewEmployeeModal() {
         </div>
       `,
       onsubmit: async (data) => {
-        await api('/employees', {
+        const created = await api('/employees', {
           method: 'POST',
           body: JSON.stringify({
             firstName: data.firstName.trim(),
@@ -159,6 +175,7 @@ async function openNewEmployeeModal() {
             designation: data.designation?.trim() || null
           })
         });
+        window.alert(`Employee created. Copy and share this one-time initial password through a secure channel:\n\n${created.initialPassword}\n\nThey must change it after signing in.`);
         toast('Employee created successfully');
         route();
       }
@@ -368,7 +385,7 @@ function openLeaveModal() {
 }
 
 function login() {
-  app.innerHTML = `<section class="login"><div class="login-art"><div class="brand"><i>E</i>Enterprise<span>OS</span></div><small>WORKFORCE OPERATIONS PLATFORM</small><h1>One shared pulse<br>for every team.</h1><p>EnterpriseOS connects your people, work, and decisions in one secure workspace.</p><b>✓ Secure role-based workspace</b></div><form class="login-card" id="login"><div class="brand mobile"><i>E</i>Enterprise<span>OS</span></div><small>SECURE SIGN IN</small><h2>Welcome back</h2><p>Sign in to continue to your organization.</p><label>Email address</label><input name="email" type="email" value="admin@demo.com" required><label>Password</label><input name="password" type="password" value="Demo@12345" required><button>Sign in to workspace <b>→</b></button><aside><strong>Try the demo</strong><br>admin@demo.com · manager@demo.com · employee@demo.com<br>Password: <code>Demo@12345</code></aside></form></section>`;
+  app.innerHTML = `<section class="login"><div class="login-art"><div class="brand"><i>E</i>Enterprise<span>OS</span></div><small>WORKFORCE OPERATIONS PLATFORM</small><h1>One shared pulse<br>for every team.</h1><p>EnterpriseOS connects your people, work, and decisions in one secure workspace.</p><b>✓ Secure role-based workspace</b></div><form class="login-card" id="login"><div class="brand mobile"><i>E</i>Enterprise<span>OS</span></div><small>SECURE SIGN IN</small><h2>Welcome back</h2><p>Sign in to continue to your organization.</p><label>Email address</label><input name="email" type="email" placeholder="you@company.com" autocomplete="username" required><label>Password</label><input name="password" type="password" placeholder="Enter your password" autocomplete="current-password" required><button>Sign in to workspace <b>→</b></button></form></section>`;
   document.querySelector('#login').onsubmit = async e => {
     e.preventDefault();
     try {
@@ -376,6 +393,23 @@ function login() {
       token = d.token;
       sessionStorage.token = token;
       user = d.user;
+      if (d.mustChangePassword) return changePassword();
+      route();
+    } catch (e) {
+      toast(e.message);
+    }
+  };
+}
+
+function changePassword() {
+  app.innerHTML = `<section class="login"><div class="login-art"><div class="brand"><i>E</i>Enterprise<span>OS</span></div><small>ACCOUNT SECURITY</small><h1>Set your own<br>secure password.</h1><p>Your initial password can only be used to sign in and set a new password.</p></div><form class="login-card" id="change-password"><div class="brand mobile"><i>E</i>Enterprise<span>OS</span></div><small>PASSWORD REQUIRED</small><h2>Change your password</h2><p>Create a unique password with at least 12 characters to continue.</p><label>Initial password</label><input name="currentPassword" type="password" required autocomplete="current-password"><label>New password</label><input name="newPassword" type="password" minlength="12" required autocomplete="new-password"><button>Save password <b>→</b></button></form></section>`;
+  document.querySelector('#change-password').onsubmit = async e => {
+    e.preventDefault();
+    try {
+      const d = await api('/auth/change-password', { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(e.target))) });
+      token = d.token;
+      sessionStorage.token = token;
+      user = null;
       route();
     } catch (e) {
       toast(e.message);
@@ -393,7 +427,7 @@ const nav = [
 
 function frame(page, body) {
   let links = nav.map(([g, items]) => `<section><small>${g}</small>${items.map(([key, i, n]) => `<a href="#${key}" class="${page === key ? 'active' : ''}"><i>${i}</i>${n}</a>`).join('')}</section>`).join('');
-  app.innerHTML = `<div class="shell"><aside class="side"><div class="brand"><i>E</i>Enterprise<span>OS</span></div><div class="workspace"><b>A</b><div><strong>Acme Systems</strong><small>Enterprise workspace</small></div>⌄</div><nav>${links}</nav><footer>?</footer></aside><main><header><div class="crumb">Acme Systems <b>/</b> ${page === 'dashboard' ? 'Overview' : label(page)}</div><div class="head-actions"><button class="quiet">⌕</button><button class="quiet">♢</button><div class="profile">${av(user.name)}<span><b>${esc(user.name)}</b><small>${label(user.role)}</small></span></div><button class="quiet" id="logout">⇥</button></div></header>${body}</main></div>`;
+  app.innerHTML = `<div class="shell"><aside class="side"><div class="brand"><i>E</i>Enterprise<span>OS</span></div><div class="workspace"><b>A</b><div><strong>EnterpriseOS</strong><small>Enterprise workspace</small></div>⌄</div><nav>${links}</nav><footer>?</footer></aside><main><header><div class="crumb">EnterpriseOS  <b>/</b> ${page === 'dashboard' ? 'Overview' : label(page)}</div><div class="head-actions"><button class="quiet">⌕</button><button class="quiet">♢</button><div class="profile">${av(user.name)}<span><b>${esc(user.name)}</b><small>${label(user.role)}</small></span></div><button class="quiet" id="logout">⇥</button></div></header>${body}</main></div>`;
   document.querySelector('#logout').onclick = () => {
     sessionStorage.clear();
     token = null;
@@ -406,7 +440,11 @@ const stat = (ico, name, value, detail) => `<article class="stat"><i>${ico}</i><
 
 async function dashboard() {
   let d = await api('/dashboard'), s = d.stats, done = d.taskStats.find(x => x.status === 'DONE')?.total || 0, pct = s.tasks ? Math.round(done / s.tasks * 100) : 0, active = d.taskStats.filter(x => x.status !== 'DONE').reduce((n, x) => n + +x.total, 0);
-  frame('dashboard', `<section class="hero"><div><small>MONDAY, SEPTEMBER 1</small><h1>Good morning, ${esc(user.name.split(' ')[0])} 👋</h1><p>Here is what needs your attention across Acme Systems today.</p></div><div><button class="secondary" id="clock">◷ Clock in</button><a href="#kanban">Open workboard →</a></div></section><section class="stats">${stat('◉', 'Total employees', s.employees, 'Active directory')}${stat('▣', 'Active projects', s.projects, 'Across all teams')}${stat('✓', 'Tasks in motion', active, `${pct}% delivery progress`)}${stat('◷', 'Attendance today', s.attendance, `${s.employees ? Math.round(s.attendance / s.employees * 100) : 0}% of team checked in`)}</section><section class="two"><article class="card"><div class="card-title"><div><small>EXECUTION</small><h2>Priority work</h2></div><a href="#kanban">View board →</a></div>${d.recent.slice(0, 5).map((t, i) => `<div class="work"><em>0${i + 1}</em><div><b>${esc(t.title)}</b><small>${av(t.assignee)}${esc(t.assignee || 'Unassigned')} · Due ${date(t.due_date)}</small></div><span class="tag ${t.status}">${label(t.status)}</span></div>`).join('') || '<p class="empty">No work items yet.</p>'}</article><article class="card health"><div class="card-title"><div><small>WORKFLOW HEALTH</small><h2>Delivery progress</h2></div><b class="percent">${pct}%</b></div><div class="donut" style="--p:${pct}"><div><b>${done}</b><small>complete</small></div></div><div class="legend"><span><i></i>Done <b>${done}</b></span><span><i></i>In progress <b>${d.taskStats.find(x => x.status === 'IN_PROGRESS')?.total || 0}</b></span><span><i></i>To do <b>${d.taskStats.find(x => x.status === 'TODO')?.total || 0}</b></span></div></article></section><section class="two lower"><article class="card"><div class="card-title"><div><small>WORKFORCE</small><h2>Leave approvals</h2></div><a href="#leaves">Open center →</a></div><div class="callout">◫<div><b>${s.pendingLeaves} request${s.pendingLeaves === 1 ? '' : 's'} awaiting review</b><small>Keep your teams informed and covered.</small></div></div></article><article class="card"><small>CONNECTED OPERATIONS</small><h2>Today at a glance</h2><p class="event"><i></i><span><b>Attendance is being recorded</b><small>${s.attendance} team members checked in today</small></span></p><p class="event purple"><i></i><span><b>Delivery is on track</b><small>${done} tasks have reached completion</small></span></p></article></section>`);
+  frame('dashboard', `<section class="hero"><div><small>${new Intl.DateTimeFormat('en-IN', {
+  weekday: 'long',
+  month: 'long',
+  day: 'numeric'
+}).format(new Date()).toUpperCase()}</small><h1>Good morning, ${esc(user.name.split(' ')[0])} 👋</h1><p>Here is what needs your attention across EnterpriseOS today.</p></div><div><button class="secondary" id="clock">◷ Clock in</button><a href="#kanban">Open workboard →</a></div></section><section class="stats">${stat('◉', 'Total employees', s.employees, 'Active directory')}${stat('▣', 'Active projects', s.projects, 'Across all teams')}${stat('✓', 'Tasks in motion', active, `${pct}% delivery progress`)}${stat('◷', 'Attendance today', s.attendance, `${s.employees ? Math.round(s.attendance / s.employees * 100) : 0}% of team checked in`)}</section><section class="two"><article class="card"><div class="card-title"><div><small>EXECUTION</small><h2>Priority work</h2></div><a href="#kanban">View board →</a></div>${d.recent.slice(0, 5).map((t, i) => `<div class="work"><em>0${i + 1}</em><div><b>${esc(t.title)}</b><small>${av(t.assignee)}${esc(t.assignee || 'Unassigned')} · Due ${date(t.due_date)}</small></div><span class="tag ${t.status}">${label(t.status)}</span></div>`).join('') || '<p class="empty">No work items yet.</p>'}</article><article class="card health"><div class="card-title"><div><small>WORKFLOW HEALTH</small><h2>Delivery progress</h2></div><b class="percent">${pct}%</b></div><div class="donut" style="--p:${pct}"><div><b>${done}</b><small>complete</small></div></div><div class="legend"><span><i></i>Done <b>${done}</b></span><span><i></i>In progress <b>${d.taskStats.find(x => x.status === 'IN_PROGRESS')?.total || 0}</b></span><span><i></i>To do <b>${d.taskStats.find(x => x.status === 'TODO')?.total || 0}</b></span></div></article></section><section class="two lower"><article class="card"><div class="card-title"><div><small>WORKFORCE</small><h2>Leave approvals</h2></div><a href="#leaves">Open center →</a></div><div class="callout">◫<div><b>${s.pendingLeaves} request${s.pendingLeaves === 1 ? '' : 's'} awaiting review</b><small>Keep your teams informed and covered.</small></div></div></article><article class="card"><small>CONNECTED OPERATIONS</small><h2>Today at a glance</h2><p class="event"><i></i><span><b>Attendance is being recorded</b><small>${s.attendance} team members checked in today</small></span></p><p class="event purple"><i></i><span><b>Delivery is on track</b><small>${done} tasks have reached completion</small></span></p></article></section>`);
   document.querySelector('#clock').onclick = async () => {
     try {
       await api('/attendance/clock-in', { method: 'POST' });
@@ -508,7 +546,7 @@ async function attendance() {
   const [rows, team] = await Promise.all([api('/attendance?limit=1000'), ['ADMIN', 'SUPER_ADMIN', 'MANAGER'].includes(user.role) ? api('/team-members') : Promise.resolve([{ name: user.name }])]);
   const records = user.role === 'MANAGER' ? rows.filter(r => team.some(member => member.name === r.employee)) : rows;
   const dayKey = value => String(value || '').slice(0, 10);
-  const now = new Date(), today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const today = indiaDate();
   const todayRows = records.filter(r => dayKey(r.work_date) === today), present = new Set(todayRows.map(r => r.employee)).size, teamSize = team.length || 1, coverage = Math.min(100, Math.round(present / teamSize * 100)), clockedIn = todayRows.filter(r => !r.clock_out).length, missing = Math.max(0, teamSize - present);
   frame('attendance', `<section class="page-title"><div><small>WORKFORCE OPERATIONS</small><h1>Attendance hub</h1><p>Keep a reliable, transparent record of the workday.</p></div><div class="view-actions"><button id="export-attendance" class="secondary export">⇩ Export CSV</button></div></section><section class="attendance"><article><small>YOUR WORKDAY</small><h2>Ready to start?</h2><p>Record your time securely. Your working duration is calculated automatically.</p><button id="in">◷ Clock in</button><button class="trans" id="out">Clock out</button><footer>✓ One attendance record per working day</footer></article><article class="card coverage-card"><small>TODAY'S COVERAGE</small><h2>${user.role === 'MANAGER' ? 'Your team attendance' : user.role === 'EMPLOYEE' ? 'Your attendance status' : 'Workforce attendance'}</h2><div class="coverage-number"><b>${coverage}%</b><span>${present} of ${teamSize} ${teamSize === 1 ? 'person' : 'people'} present</span></div><div class="coverage-meter" role="progressbar" aria-label="Attendance coverage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${coverage}"><i style="width:${coverage}%"></i></div><div class="coverage-stats"><span><b>${clockedIn}</b> currently clocked in</span><span><b>${missing}</b> not recorded</span></div><small>Updated from today’s actual clock-in records.</small></article></section><section style="margin-top:24px"><div class="card-title"><div><small>FULL RECORD</small><h2>Attendance database</h2></div></div><p class="data-note"><b>${records.length} records loaded</b> · Search the complete record and export it for Excel.</p><section class="tablecard"><div class="toolbar"><label>⌕ <input id="attendance-search" placeholder="Search employee, email, or department"></label></div><div class="scroll"><table><thead><tr><th>Employee</th><th>Department</th><th>Work date</th><th>Clock in</th><th>Clock out</th><th>Status</th></tr></thead><tbody>${records.map(r => `<tr><td class="person">${av(r.employee)}<span><b>${esc(r.employee)}</b><small>${esc(r.email)}</small></span></td><td>${esc(r.department || '—')}</td><td>${date(r.work_date)}</td><td>${r.clock_in ? new Date(r.clock_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'}</td><td>${r.clock_out ? new Date(r.clock_out).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Open'}</td><td><span class="tag status-present">${label(r.status || 'PRESENT')}</span></td></tr>`).join('') || '<tr><td colspan="6" class="empty">No attendance records yet.</td></tr>'}</tbody></table></div></section></section>`);
   for (let [id, path] of [['in', 'clock-in'], ['out', 'clock-out']]) {

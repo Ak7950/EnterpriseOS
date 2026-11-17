@@ -2,7 +2,12 @@ import pg from 'pg';
 import { newDb, DataType } from 'pg-mem';
 import crypto from 'node:crypto';
 const { Pool } = pg;
-const memory = !process.env.DATABASE_URL;
+export const isInMemory = !process.env.DATABASE_URL;
+const memory = isInMemory;
+
+if (memory && process.env.NODE_ENV === 'production') {
+  throw new Error('DATABASE_URL is required in production. Refusing to use the in-memory database.');
+}
 const db = memory ? newDb({ autoCreateForeignKeyIndices: true }) : null;
 if (memory) db.public.registerFunction({ name: 'gen_random_uuid', returns: DataType.uuid, implementation: () => crypto.randomUUID(), impure: true });
 export const pool = memory ? newDbPool(db) : new Pool({ connectionString: process.env.DATABASE_URL });
@@ -23,5 +28,6 @@ export async function migrate() {
   CREATE TABLE IF NOT EXISTS notifications(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), organization_id uuid REFERENCES organizations(id), recipient_id uuid REFERENCES users(id), type text NOT NULL, title text NOT NULL, message text NOT NULL, read boolean DEFAULT false, created_at timestamptz DEFAULT now());
   CREATE TABLE IF NOT EXISTS audit_logs(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), organization_id uuid REFERENCES organizations(id), actor_id uuid REFERENCES users(id), action text NOT NULL, entity text NOT NULL, entity_id uuid, metadata jsonb DEFAULT '{}', created_at timestamptz DEFAULT now());
   ALTER TABLE users ADD COLUMN IF NOT EXISTS manager_id uuid REFERENCES users(id);
+  ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password boolean NOT NULL DEFAULT false;
   CREATE INDEX IF NOT EXISTS ix_tasks_tenant ON tasks(organization_id,status); CREATE INDEX IF NOT EXISTS ix_users_manager ON users(manager_id); CREATE INDEX IF NOT EXISTS ix_audit_tenant ON audit_logs(organization_id,created_at DESC);`);
 }

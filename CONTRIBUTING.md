@@ -1,36 +1,42 @@
 # Contributing to EnterpriseOS
 
-Use pull requests for feature work; do not push feature changes directly to `main`.
+Thank you for helping improve EnterpriseOS. Keep changes focused, preserve tenant boundaries, and update documentation/tests whenever behavior or configuration changes.
 
-```text
-main → feature/* → Pull Request → CI → Code Review → Merge
-```
+## Development workflow
 
-1. Create a branch, for example `feature/attendance-export` or `fix/login-session`.
-2. Make focused changes and keep working functionality intact.
-3. Run `npm test`.
-4. Commit with a meaningful message.
-5. Push the branch and open a pull request.
-6. Wait for CI and request review.
-7. Address review comments.
-8. Merge only after approval and passing checks.
+1. Create a focused branch from the intended base branch.
+2. Install dependencies with npm ci.
+3. Create a local .env from .env.example; never commit .env or real credentials.
+4. Make the smallest complete change that addresses the task.
+5. Add or update automated tests for changed behavior.
+6. Run npm test, npm audit --omit=dev, and git diff --check.
+7. Commit with a clear conventional message.
+8. Push the branch and open a pull request.
+9. Review the diff and CI result before merging.
 
-Recommended commit styles:
+Example commit messages:
 
-```text
-feat: add employee management API
-fix: prevent duplicate attendance records
-test: add authentication integration tests
-docs: update architecture documentation
-chore: configure CI workflow
-```
+~~~text
+feat: add employee management workflow
+fix: enforce organization boundary for task assignment
+test: cover attendance date conversion
+docs: refresh deployment instructions
+chore: update CI workflow
+~~~
 
-Avoid messages such as `update`, `final`, `changes`, `abc`, or `test123`.
+## Project team
 
-## Three-person responsibilities
+EnterpriseOS is developed by Group 4 for Software Engineering (UCS503):
 
-- Backend/API/database: schema, authentication, routes, authorization, and seed data.
-- Frontend/UI: client behavior, accessible UI, and browser workflows.
-- Integration/DevOps/quality: Docker, CI, API integration tests, analytics/reporting, release readiness, and documentation.
+- Avik Khetarpal
+- Humza Ali Choudhri
+- Shashwat Tewari
 
-All contributors should update tests and documentation when their changes require it. Never commit `.env`, credentials, `node_modules`, generated logs, or unrelated files.
+The team shares responsibility for requirements, design, implementation, verification, and documentation. Do not assign an individual ownership claim in project documentation unless it has been confirmed by the team.
+
+## Security and data handling
+
+- Never commit .env, Neon connection strings, JWT secrets, one-time passwords, or real user data.
+- Use synthetic test records in issues, screenshots, and demonstrations.
+- Do not seed demo accounts into production.
+- Report suspected vulnerabilities privately using SECURITY.md.
