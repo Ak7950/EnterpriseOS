@@ -6,10 +6,11 @@ process.env.NODE_ENV = 'test';
 process.env.DATABASE_URL = '';
 process.env.JWT_SECRET = 'test-only-secret-with-at-least-32-characters';
 
-const [{ default: app }, { migrate, q, pool }, { hash, tokenFor }] = await Promise.all([
+const [{ default: app }, { migrate, q, pool }, { hash, tokenFor }, { indiaDate }] = await Promise.all([
   import('../server/index.js'),
   import('../server/db.js'),
-  import('../server/auth.js')
+  import('../server/auth.js'),
+  import('../server/time.js')
 ]);
 
 await migrate();
@@ -59,6 +60,24 @@ test('manager employee view is limited to their direct reports', async () => {
   const employees = (await response.json()).data;
 
   assert.deepEqual(employees.map(employee => employee.id).sort(), [ids.manager, ids.report].sort());
+});
+
+test('attendance clock-in, dashboard count, and clock-out use the India-local work date', async () => {
+  const clockInResponse = await api('/api/attendance/clock-in', { method: 'POST' });
+  assert.equal(clockInResponse.status, 201);
+  const clockIn = (await clockInResponse.json()).data;
+  assert.equal(String(clockIn.work_date).slice(0, 10), indiaDate());
+
+  const dashboardResponse = await api('/api/dashboard');
+  assert.equal(dashboardResponse.status, 200);
+  const dashboard = (await dashboardResponse.json()).data;
+  assert.equal(dashboard.stats.attendance, 1);
+
+  const clockOutResponse = await api('/api/attendance/clock-out', { method: 'POST' });
+  assert.equal(clockOutResponse.status, 200);
+  const clockOut = (await clockOutResponse.json()).data;
+  assert.equal(String(clockOut.work_date).slice(0, 10), indiaDate());
+  assert.ok(clockOut.clock_out);
 });
 
 test('an admin cannot create a super-admin account', async () => {
