@@ -2,13 +2,19 @@
 
 ## Current release status
 
-The project has a publicly accessible Vercel Preview deployment connected to Neon PostgreSQL. The Preview URL recorded in the submitted IEEE report is:
+The current Production application is available at:
+
+**https://enterprise-os-alpha.vercel.app/**
+
+The Production domain is attached to the Vercel project and was opened successfully in an incognito browser. The dashboard, People Directory, Departments, Projects, Execution Board, Attendance Hub, Leave Center page, Notifications, and Audit Trail were smoke-tested against the connected Neon database. The attendance clock-in/dashboard count/clock-out flow was verified using the Asia/Kolkata work date. GitHub Actions passed 21 automated tests on the merged `main` release; the recorded production dependency audit reported 0 vulnerabilities.
+
+The submitted IEEE report contains the earlier deployment-specific Preview URL:
 
 **https://enterprise-ra6w4zeh7-ak795.vercel.app/**
 
-Keep this deployment available while it is used for academic evaluation. A Vercel deployment-specific URL can differ from the project's stable Production domain.
+That generated URL identifies the earlier Preview deployment and should not be represented as the latest Production build. The report file has not been modified. For the latest deployed application, use the Production URL at the top of this section.
 
-**Production release is not marked as verified in this repository.** Before describing the system as Production-deployed, configure the Production environment variables, promote the intended build, and complete the smoke test below.
+The leave request approval workflow has not been exercised end to end. Full browser end-to-end, load, penetration, and dedicated PostgreSQL integration testing have not been performed.
 
 ## Hosting architecture
 
@@ -96,4 +102,4 @@ After the intended build is deployed:
 
 - The dashboard attendance count and attendance clock-in/clock-out operations now use the server-side Asia/Kolkata date helper.
 - The India-local date helper is covered by UTC/IST boundary unit tests, and an API regression test covers clock-in, dashboard attendance counting, and clock-out.
-- The tested public Preview should not be described as a verified Production release until the separate Production-domain smoke test has passed.
+- The Production URL above is the current live application. The deployment-specific Preview URL in the submitted report is a separate, older build.

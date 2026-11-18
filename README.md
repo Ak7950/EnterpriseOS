@@ -2,11 +2,11 @@
 
 **Enterprise Workforce Management System (EWMS)** — a browser-based, multi-tenant workspace for workforce administration and project delivery.
 
-[![Live demo](https://img.shields.io/badge/demo-public%20Vercel%20preview-2563eb)](https://enterprise-ra6w4zeh7-ak795.vercel.app/)
+[![Live production demo](https://img.shields.io/badge/demo-production-159976)](https://enterprise-os-alpha.vercel.app/)
 [![Repository](https://img.shields.io/badge/source-GitHub-181717?logo=github)](https://github.com/Ak7950/EnterpriseOS)
 
-> **Live demonstration:** [Open EnterpriseOS](https://enterprise-ra6w4zeh7-ak795.vercel.app/)  
-> This is the public Vercel Preview URL recorded in the submitted IEEE report. It is deployment-specific; preserve this deployment while it is being used for academic evaluation. The separate Production-domain release has not yet been marked as verified.
+> **Current live Production application:** [Open EnterpriseOS](https://enterprise-os-alpha.vercel.app/)  
+> **Important link note:** The submitted IEEE report contains the earlier deployment-specific Preview URL (`https://enterprise-ra6w4zeh7-ak795.vercel.app/`). That URL identifies the earlier Preview build. For the latest merged release, use the Production URL above. The submitted report file itself has not been modified.
 
 ## Overview
 
@@ -149,7 +149,7 @@ See [Testing](docs/testing.md) and [Security](docs/security.md).
 
 The tested public demonstration is the Vercel Preview URL shown at the top of this README and in the submitted IEEE report. Vercel hosts the application entry point and static assets; Neon provides PostgreSQL persistence.
 
-**Production release status:** The public Preview has been opened and tested. The separate Vercel Production-domain release has not yet been confirmed by a successful end-to-end smoke test. Do not describe the Preview as a verified Production release.
+**Production release status:** The Production domain `https://enterprise-os-alpha.vercel.app/` is configured and has been opened in an incognito browser. The dashboard, people directory, departments, projects, execution board, attendance, leave-center page, notifications, and audit trail were visually smoke-tested against the connected Neon database. The attendance flow was tested through clock-in and clock-out using the India-local work date. GitHub Actions passed 21 automated tests; the recorded production-dependency audit reported 0 vulnerabilities. A complete leave-request approval workflow, full browser end-to-end suite, load test, and dedicated PostgreSQL integration test suite have not been performed.
 
 For environment configuration, database migration, first-admin setup, and the deployment smoke test, see [Deployment](docs/deployment.md).
 
